@@ -1,5 +1,5 @@
 # lamp-control
-Arduino and web based lamp automation with ESP01  
+Arduino and LAN based lamp automation with ESP01  
   
 Requirements:  
 Arduino  
