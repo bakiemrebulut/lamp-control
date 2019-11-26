@@ -21,7 +21,7 @@ Web page is streamed on IP address of ESP so you should be check and switch your
 Then you can access page with this IP.  
   
 Example web page:  
-Click here turn the LED OFF   
+Click here turn the OFF   
                               
 Temperature:25.42             
   
