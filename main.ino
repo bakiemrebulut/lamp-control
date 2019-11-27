@@ -1,8 +1,9 @@
 #define BUTTON 8
 #define RELAY 9
 #define TEMP A5
-#define ssid <SSID>
-#define pass <password>
+
+const String ssid="ssid";
+const String pass="password";
 String text;
 bool state=true;
 String request;
@@ -10,33 +11,20 @@ float temperature;
   
 void serverSet()
 {
-    while(!Serial.find("OK"))
-    {
-      Serial.println("AT+CIPSERVER=1,80");
-      delay(500);
-    }
+    Serial.println("AT+CIPSERVER=1,80");
+    (!Serial.find("OK"));
 }
 void connectNetwork(String ssid,String password)
 {
-    while(!Serial.available());
+    Serial.println("AT+CWJAP=\""+ssid+"\",\""+password+"\"");
+    while(!Serial.find("WIFI GOT IP"));
+    delay(10);
     Serial.println("AT+CWMODE=1"); 
-    while(!Serial.find("OK"))
-    {
-      Serial.println("AT+CWMODE=1"); 
-      delay(500);
-    }
-    while(!Serial.find("WIFI GOT IP"))
-    {
-      Serial.println("AT+CWJAP=\""+ssid+"\",\""+password+"\"");
-      delay(5000);
-    }
-    delay(5000);
+    while(!Serial.find("OK"));
+    delay(10);
     Serial.println("AT+CIPMUX=1");
-    while(!Serial.find("OK"))
-    {
-      Serial.println("AT+CIPMUX=1");
-      delay(500);
-    }                                
+    while(!Serial.find("OK"));
+    delay(10);
 }
 float readTemp()
 {
@@ -46,45 +34,49 @@ float readTemp()
   return temperature;
 }
 void setup() {
+    pinMode(13,OUTPUT);
+    digitalWrite(13,LOW);
     Serial.begin(115200);
-    while(!Serial.available());
-    
     connectNetwork( ssid, pass);  
-    pinMode(RELAY,OUTPUT);
     pinMode(BUTTON,INPUT);//button
-    while(!Serial.find("OK"))
-    {
-      Serial.println("AT");
-      delay(500);
-    }
+    Serial.println("AT");
+    while(!Serial.find("OK"));
     serverSet();
-    
+    pinMode(RELAY,OUTPUT);
+    Serial.println("AT+CIFSR");
+    Serial.println(Serial.readString());
+    Serial.println("AT");
+    while(!Serial.find("OK"));
+    loop();
 }
 
-
+int count;
 void loop() { 
+  count=0;
   while(!Serial.find(",CONNECT"))
   {
+    digitalWrite(13,HIGH);
     if(digitalRead(BUTTON))
     {
       state=!state;
     }
     if(state)//state is on
     {
-      text="<br>Click <a href=\"/LED=OFF\">here</a> turn the OFF<br>";
+      text="<br>Click <a href=\"/LED=OFF\">here</a> turn the LED OFF<br>";
       digitalWrite(RELAY,HIGH);
     }
     else//state is off
     {
-      text="<br>Click <a href=\"/LED=ON\">here</a> turn the ON<br>";
+      text="<br>Click <a href=\"/LED=ON\">here</a> turn the LED ON<br>";
       digitalWrite(RELAY,LOW);
+    }
+    count++;
+    if(count==3600)//reset every 1 hour if no request arrived
+    {
+      setup();
     }
   }
   request=Serial.readStringUntil("\n");
-//   mySerial.begin(115200);
-//  mySerial.println(request);
-
-
     if(request.indexOf(" /LED=ON")!=-1)// on valid
     {
       state=true;
@@ -96,17 +88,18 @@ void loop() {
 
     if(state)//state is on
     {
-      text="<br>Click <a href=\"/LED=OFF\">here</a> turn the OFF<br>";
+      text="<br>Click <a href=\"/LED=OFF\">here</a> turn the LED OFF<br>";
       digitalWrite(RELAY,HIGH);
     }
     else//state is off
     {
-      text="<br>Click <a href=\"/LED=ON\">here</a> turn the ON<br>";
+      text="<br>Click <a href=\"/LED=ON\">here</a> turn the LED ON<br>";
       digitalWrite(RELAY,LOW);
     }
   temperature=readTemp();
   String sendData=String("HTTP/1.1 200 OK\r\n") +
-            "Content-Type: text/html\r\nConnection: close\r\n\r\n<!DOCTYPE HTML>" +"<html>"+text+"<br>Temperature:"+String(temperature)+"<br></html>\r\n";
+  "Content-Type: text/html\r\nConnection: close\r\n\r\n<!DOCTYPE HTML>" +
+  "<html>"+text+"<br>Temperature:"+String(temperature)+"<br></html>\r\n";
 
   Serial.print("AT+CIPSEND=0,");
   Serial.println(sendData.length());
