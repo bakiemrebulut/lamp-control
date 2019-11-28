@@ -1,6 +1,7 @@
 #define BUTTON 8
 #define RELAY 9
 #define TEMP A5
+#include <avr/wdt.h>
 
 const String ssid="ssid";
 const String pass="password";
@@ -37,6 +38,7 @@ void setup() {
     pinMode(13,OUTPUT);
     digitalWrite(13,LOW);
     Serial.begin(115200);
+    wdt_enable(WDTO_8S);
     connectNetwork( ssid, pass);  
     pinMode(BUTTON,INPUT);//button
     Serial.println("AT");
@@ -55,6 +57,7 @@ void loop() {
   count=0;
   while(!Serial.find(",CONNECT"))
   {
+    wdt_reset();
     digitalWrite(13,HIGH);
     if(digitalRead(BUTTON))
     {
