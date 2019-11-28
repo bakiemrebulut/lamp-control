@@ -39,16 +39,20 @@ void setup() {
     digitalWrite(13,LOW);
     Serial.begin(115200);
     wdt_enable(WDTO_8S);
+    wdt_reset();
     connectNetwork( ssid, pass);  
+    wdt_reset();
     pinMode(BUTTON,INPUT);//button
     Serial.println("AT");
     while(!Serial.find("OK"));
     serverSet();
-    pinMode(RELAY,OUTPUT);
+    wdt_reset();
     Serial.println("AT+CIFSR");
     Serial.println(Serial.readString());
     Serial.println("AT");
     while(!Serial.find("OK"));
+    pinMode(RELAY,OUTPUT);
+    wdt_reset();
     loop();
 }
 
